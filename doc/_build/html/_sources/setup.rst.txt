@@ -1,0 +1,10 @@
+Setup
+=====
+
+Welcome to the setup guide.
+
+Steps
+-----
+
+1. Install dependencies
+2. Run the model
