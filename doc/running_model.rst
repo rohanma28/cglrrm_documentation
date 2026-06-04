@@ -130,7 +130,7 @@ plot for each simulation, as such.
 Note that you can also change the parameters present in CGLRRM_params.2008 such as the locations of the input files, the initial water levels of each lake, and the
 start and end dates of the simulations, however the model should still run with the current configuration of the parameters.
 
-    .. image:: /src/_static/waterLevels.png
+    .. image:: _static/waterLevels.png
      :width: 600px
      :align: center
 
@@ -145,7 +145,7 @@ red and a collection of simulations of forecasted water levels in black. The bot
 simulations (forecasted simulations under no climate alterations) in red, and the distribution of average water levels under the altered evaporation simulation in black. 
 The red and black bars show the medians of the distributions.
 
-    .. image:: /src/_static/avgchangeprecip.png
+    .. image:: _static/avgchangeprecip.png
      :width: 600px
      :align: center
 
