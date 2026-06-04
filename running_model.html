@@ -1,0 +1,277 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running the Model &mdash; Great Lakes Copula and Routing Model Usage Documentation v1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=e160b93e"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to the Great Lakes Copula and Routing Model’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Great Lakes Copula and Routing Model Usage Documentation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running the Model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#step-1-formatting-the-l2swbm-data">Step 1: Formatting the L2SWBM Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-2a-creating-and-sampling-from-the-copula-model">Step 2a: Creating and Sampling From the Copula Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-2b-sampling-from-the-copula-model-under-future-climate-scenarios">Step 2b: Sampling From the Copula Model Under Future Climate Scenarios</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-3-creating-the-forecasted-nbs-values-and-running-the-cglrrm">Step 3: Creating the Forecasted NBS Values and Running the CGLRRM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-4-analyzing-the-output">Step 4: Analyzing the Output</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Great Lakes Copula and Routing Model Usage Documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Running the Model</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/running_model.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="running-the-model">
+<h1>Running the Model<a class="headerlink" href="#running-the-model" title="Link to this heading"></a></h1>
+<p>In this section, I will explain the steps to create future water level forecasts.</p>
+<section id="step-1-formatting-the-l2swbm-data">
+<h2>Step 1: Formatting the L2SWBM Data<a class="headerlink" href="#step-1-formatting-the-l2swbm-data" title="Link to this heading"></a></h2>
+<p>Within the “Copula” folder, there is a folder titled “L2SWBM_med_1950-2022” that contains the output of running the
+Large Lake Statistical Water Balance (L2SWBM, L2S for short) model on the Great Lakes. This model takes multiple reliable
+estimates for water balance components across the Great Lakes and reconciles them into confidence intervals for each
+components. If you are interested in recreating the output yourself, you can run one of the models found
+<a class="reference external" href="https://github.com/luo-yifan/L2SWBM">here</a>.</p>
+<p>The output of the L2S consists of multiple CSV files, each corresponding to a water balance component (precipitation, evaporation,
+runoff, etc.) for one lake, whose rows include a confidence interval for what the true component value was for a specific month.
+These confidence intervals are what we use to create the multivariate distribution that is the copula model. These values are fed
+into the “InputDataFormatting.R” file to create a csv file with the medians found in the “formatted_input” folder and an R object
+of the 95% confidence intervals for each component for each month (averaged through the years) on each lake.</p>
+<p>On inspection of the file in the “formatted_input” folder, one may be confused regarding the present of three extra
+antecedent months prior to the regular 12 months of data. From my prior reading, this is because during the development
+phase of the copula model the developers wanted to see if chaining together simulations by matching the final three months
+of one simulation to the antecedent three months of another simulation (that’s why L_ant is 3) would result in simulations
+that were significantly more true to historical observations which was found to not be the case. The code is still structured
+in a way to leave the door open in case the “matching” idea was to be explored later down the line but from my experience it
+wasn’t something I looked into.</p>
+</section>
+<section id="step-2a-creating-and-sampling-from-the-copula-model">
+<h2>Step 2a: Creating and Sampling From the Copula Model<a class="headerlink" href="#step-2a-creating-and-sampling-from-the-copula-model" title="Link to this heading"></a></h2>
+<p>Once the L2S input is formatted, we pass it into the “FittingAndSampling.R” file in order to create the copula using the
+Vine Copula library of R. A high level overview of the copula model is that it is a multivariate distribution that describes
+how the random variables used to create it are related (the dependence structure) but has uniformly distributed marginal
+distributions for each variable. We generate pseudo-random samples from the Copula in which the values for each component will range
+from 0 to 1, and then we create marginal distributions of the component values for each month for each lake using the medians from
+the L2S data and pass the pseudo-random samples through these marginal distributions to get real values for the components. The
+marginal distribution of precipitation is gamma, that of evaporation is normal, and that of runoff is log-normal.</p>
+<p>The following code blocks are from the “2a_FittingAndSampling.R” file. This first snippet is part of a for loop that loops through
+each combination of component-lake-month for the LS2WBM outputs (stored in vals) and stores the relevant parameters of the observed
+distribution of the values based on the component that is being analyzed.</p>
+<blockquote>
+<div><div class="highlight-R notranslate"><div class="highlight"><pre><span></span><span class="nf">if </span><span class="p">(</span><span class="n">comp</span><span class="o">==</span><span class="s">&quot;P&quot;</span><span class="p">){</span>
+<span class="w">    </span><span class="c1"># Define gamma parameters</span>
+<span class="w">    </span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">x.bar_s</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span><span class="w"> </span><span class="n">na.rm</span><span class="o">=</span><span class="bp">T</span><span class="p">)</span>
+<span class="w">    </span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">theta_s</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">x.bar_s</span><span class="p">)</span><span class="o">-</span><span class="nf">mean</span><span class="p">(</span><span class="nf">log</span><span class="p">(</span><span class="n">vals</span><span class="p">),</span><span class="n">na.rm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span>
+<span class="w">    </span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">shape</span><span class="w">   </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">1</span><span class="o">/</span><span class="p">(</span><span class="m">4</span><span class="o">*</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">theta_s</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="m">1</span><span class="o">+</span><span class="nf">sqrt</span><span class="p">(</span><span class="m">1+4</span><span class="o">*</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">theta_s</span><span class="o">/</span><span class="m">3</span><span class="p">))</span>
+<span class="w">    </span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">rate</span><span class="w">    </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">shape</span><span class="o">/</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">x.bar_s</span>
+<span class="w">    </span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">scale</span><span class="w">   </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">1</span><span class="o">/</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">rate</span>
+<span class="w">    </span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">thres</span><span class="w">   </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">0</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>This second code snippet takes the aforementioned pseudorandom samples from the copula distribution (stored in samp_mat) which are from from 0 to 1, and passes them
+through the marginal distributions that we just created, which returns the “actual” values for the components (actual in quotations because these
+are still simulated values).</p>
+<blockquote>
+<div><div class="highlight-R notranslate"><div class="highlight"><pre><span></span><span class="nf">if</span><span class="p">(</span><span class="n">comp</span><span class="o">==</span><span class="s">&quot;P&quot;</span><span class="p">){</span>
+<span class="w">    </span><span class="n">samp_mat</span><span class="p">[,</span><span class="n">col</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">qgamma3</span><span class="p">(</span><span class="n">pvals</span><span class="p">,</span><span class="n">shape</span><span class="o">=</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">shape</span><span class="p">,</span>
+<span class="w">                                    </span><span class="n">scale</span><span class="o">=</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">scale</span><span class="p">,</span>
+<span class="w">                                    </span><span class="n">thres</span><span class="o">=</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">col</span><span class="p">]]</span><span class="o">$</span><span class="n">thres</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="step-2b-sampling-from-the-copula-model-under-future-climate-scenarios">
+<h2>Step 2b: Sampling From the Copula Model Under Future Climate Scenarios<a class="headerlink" href="#step-2b-sampling-from-the-copula-model-under-future-climate-scenarios" title="Link to this heading"></a></h2>
+<p>Under future climate scenarios, we expect the distributions of the component values to change from their historical trend.
+As such, in order to create component values under different climate scenarios, we should take the pseudo-random samples
+and pass them through adjusted marginal distributions. Note that this assumes that our dependency structure remains the same
+no matter what the underlying climate is, which may not be a reasonable assumption. This is definitely an area for future
+exploration!</p>
+<p>The following code block is from the “2b_FitSampSimulation.R” file and details how we can shift the means of precipitation for
+each month (note that this code ignores interlake variation - one must quintuple the weight vector to apply different weights for
+each). The pweights vector is the percent shift in the mean, so to bring the mean from 90 to 100, we would apply a weight of 1.1111.
+The means should be adjusted such as to keep the coefficient of variation of the distribution, which is the standard deviation divided
+by the mean, the same as it is in the original distribution. For a gamma distribution, the coefficient of variation is only affected by
+the shape parameter, so we must keep the shape parameters the same as they originally were and change the scale parameter to reflect the
+adjusted means. You can do similar calculations to determine how to change the means for evaporation and runoff.</p>
+<p>One can also read in the csv files in the “2b_input_changefiles” folder instead of constructing the weight vector manually.</p>
+<blockquote>
+<div><div class="highlight-R notranslate"><div class="highlight"><pre><span></span><span class="n">pweights</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">)</span>
+
+<span class="nf">for </span><span class="p">(</span><span class="n">col</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">46</span><span class="p">,</span><span class="w"> </span><span class="m">91</span><span class="p">,</span><span class="w"> </span><span class="m">136</span><span class="p">,</span><span class="w"> </span><span class="m">181</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">meanvec</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">as.numeric</span><span class="p">(</span><span class="nf">unlist</span><span class="p">(</span><span class="nf">sapply</span><span class="p">(</span><span class="n">marginal_pars</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">)[</span><span class="n">col</span><span class="o">:</span><span class="p">(</span><span class="n">col</span><span class="m">+14</span><span class="p">)]))</span>
+<span class="w">    </span><span class="n">smoothmeans</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">loess.smooth</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="o">:</span><span class="m">15</span><span class="p">),</span><span class="w"> </span><span class="n">meanvec</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">pweights</span><span class="p">,</span><span class="w"> </span><span class="n">evaluation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">15</span><span class="p">)[[</span><span class="m">2</span><span class="p">]]</span>
+<span class="w">    </span><span class="n">shapevec</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">as.numeric</span><span class="p">(</span><span class="nf">unlist</span><span class="p">(</span><span class="nf">sapply</span><span class="p">(</span><span class="n">marginal_pars</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;[&quot;</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">)[</span><span class="n">col</span><span class="o">:</span><span class="p">(</span><span class="n">col</span><span class="m">+14</span><span class="p">)]))</span>
+<span class="w">    </span><span class="n">newscales</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">smoothmeans</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">shapevec</span>
+
+<span class="w">    </span><span class="nf">for </span><span class="p">(</span><span class="n">subcol</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="nf">seq</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="w"> </span><span class="n">col</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">14</span><span class="p">,</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">comp</span><span class="w">  </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">substr</span><span class="p">(</span><span class="nf">colnames</span><span class="p">(</span><span class="n">psamp_mat</span><span class="p">)[</span><span class="n">subcol</span><span class="p">],</span><span class="n">start</span><span class="o">=</span><span class="nf">nchar</span><span class="p">(</span><span class="nf">colnames</span><span class="p">(</span><span class="n">psamp_mat</span><span class="p">)[</span><span class="n">subcol</span><span class="p">]),</span><span class="n">stop</span><span class="o">=</span><span class="nf">nchar</span><span class="p">(</span><span class="nf">colnames</span><span class="p">(</span><span class="n">psamp_mat</span><span class="p">)[</span><span class="n">subcol</span><span class="p">]))</span>
+<span class="w">        </span><span class="n">pvals</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">psamp_mat</span><span class="p">[,</span><span class="n">subcol</span><span class="p">]</span>
+
+<span class="w">        </span><span class="n">samp_mat</span><span class="p">[,</span><span class="n">subcol</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">qgamma3</span><span class="p">(</span><span class="n">pvals</span><span class="p">,</span><span class="n">shape</span><span class="o">=</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">subcol</span><span class="p">]]</span><span class="o">$</span><span class="n">shape</span><span class="p">,</span>
+<span class="w">                                    </span><span class="n">scale</span><span class="o">=</span><span class="n">newscales</span><span class="p">[</span><span class="n">subcol</span><span class="w"> </span><span class="o">%%</span><span class="w"> </span><span class="m">45</span><span class="p">],</span>
+<span class="w">                                    </span><span class="n">thres</span><span class="o">=</span><span class="n">marginal_pars</span><span class="p">[[</span><span class="n">subcol</span><span class="p">]]</span><span class="o">$</span><span class="n">thres</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="step-3-creating-the-forecasted-nbs-values-and-running-the-cglrrm">
+<h2>Step 3: Creating the Forecasted NBS Values and Running the CGLRRM<a class="headerlink" href="#step-3-creating-the-forecasted-nbs-values-and-running-the-cglrrm" title="Link to this heading"></a></h2>
+<p>In “3_MatchingAndPlotting.R”, we take the R object with the “actual” component values that we created in the previous step and sample random
+rows of the component value matrix. Then, we calculate the net basin supply (P - E + R) for each month for each lake and store the NBS values in
+individual files for each lake. These output files are found in “3_output”. The “3_plots” folder also contains plots generated from this code file,
+although I have never referenced them.</p>
+<p>The next step is to run the Coordinated Great Lakes Regulation and Routing Model, which determines the extent to which water flows between the rivers
+such as to determine the lakes’ water levels. Note that the model that we are using is the most easily accessible model but was coded in Fortran decades
+ago and is thus operationally outdated; researchers at GLERL are working on their own Python/R version of the CGLRRM.</p>
+<p>The way that the MatchingAndPlotting file is currently configured, running the file also formats the files such that they can be fed into the CGLRRM by
+running the “input_file_structure.R” file and then also runs the CGLRRM itself with the “system(“cglrrm_test.exe”) file. However, this will only work if
+you have created the executable. You need to make sure that your current working device has a Fortran compiler: on Windows, download the Intel Fortran
+Compiler (ifort), and on MacOS, download gfortran via Homebrew. Once this is installed, on Windows, run “ifort CGLRRM.FOR CALCUTL.FOR CONTROL.FOR CUSTOM.FOR
+INIT.FOR MIDLAKES.FOR MISCUTL.FOR TSINPUT.FOR SUPERIOR.FOR Preproject.for SuperiorRegPlans.for ontario.for ontarioinit.for -o cglrrm_test”. This code is the same
+for MacOS except that “ifort” must be replaced by “gfortran”. This will create an executable called cglrrm_test.exe. The raw outputs of the CGLRRM after we run
+the executable will be found in the “CGLRRM_Rohan/output” folder, in which the four files with format <a href="#id1"><span class="problematic" id="id2">**</span></a><a href="#id3"><span class="problematic" id="id4">**</span></a>lv.test are the relevant water level files. The
+“3_MatchingAndPlotting.R” codefile contains the code that turns these test files into clean csv files within the “output/{sim_name}/{sim_number}”” directory,
+where you hardcode in the sim_name, and the sim_number is generated in a for loop. Finally, the code runs the “plotting.R” file, which creates a water level
+plot for each simulation, as such.</p>
+<p>Note that you can also change the parameters present in CGLRRM_params.2008 such as the locations of the input files, the initial water levels of each lake, and the
+start and end dates of the simulations, however the model should still run with the current configuration of the parameters.</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/waterLevels.png"><img alt="_images/waterLevels.png" class="align-center" src="_images/waterLevels.png" style="width: 600px;" />
+</a>
+</div></blockquote>
+</section>
+<section id="step-4-analyzing-the-output">
+<h2>Step 4: Analyzing the Output<a class="headerlink" href="#step-4-analyzing-the-output" title="Link to this heading"></a></h2>
+<p>Now that you have the output from the routing model, you can run the fullplot.R codefile in the “r_code” directory to showcase all of the simulated water levels
+together in a water level plot, and you can compare forecasted water levels under the current climate to your new simulation under a different climate change scenarios
+in terms of variables like average water level, minimum water level, maximum water level, and variance. These plots will be stored in the corresponding directory for the
+simulation. Below is an example with the average water levels using a changed precipitation simulation. The top set of plots shows the true historical water levels in
+red and a collection of simulations of forecasted water levels in black. The bottom set of plots compares the distribution of average water levels for the baseline
+simulations (forecasted simulations under no climate alterations) in red, and the distribution of average water levels under the altered evaporation simulation in black.
+The red and black bars show the medians of the distributions.</p>
+<blockquote>
+<div><a class="reference internal image-reference" href="_images/avgchangeprecip.png"><img alt="_images/avgchangeprecip.png" class="align-center" src="_images/avgchangeprecip.png" style="width: 600px;" />
+</a>
+</div></blockquote>
+<p>In the “threedplot.R” file, I created a three-dimension plot with precipitation on the x-axis, evaporation on the y-axis, and water level on the z-axis and plotted what
+would happen if I shifted precipitation and evaporation by incremental percent changes for each month for each lake. The fact that I was able to do this is an amazing
+capability that being able to run the three aforementioned models in ensemble can bring you!</p>
+<p>In order to create the data that “threedplot.R” takes in, uncomment the three-dimensional plot part of “2b_FitSampSimulation.R” and edit “3_MatchingAndPlotting.R” to include
+the following code block before the for loop across all of the simulations start.</p>
+<blockquote>
+<div><div class="highlight-R notranslate"><div class="highlight"><pre><span></span><span class="n">supmeans</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="n">stcmeans</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="n">mihmeans</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+<span class="n">erimeans</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">rep</span><span class="p">(</span><span class="m">0</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Further, edit “3_MatchingAndPlotting.R” to include the following code block after the for loop ends.</p>
+<blockquote>
+<div><div class="highlight-R notranslate"><div class="highlight"><pre><span></span><span class="n">sup_sim</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">read.table</span><span class="p">(</span><span class="s">&quot;/raw_output/spmmlv.test&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">skip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">18</span><span class="p">)</span>
+<span class="n">stc_sim</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">read.table</span><span class="p">(</span><span class="s">&quot;/raw_output/scmmlv.test&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">skip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">19</span><span class="p">)</span>
+<span class="n">mih_sim</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">read.table</span><span class="p">(</span><span class="s">&quot;/raw_output/mhmmlv.test&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">skip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">19</span><span class="p">)</span>
+<span class="n">eri_sim</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">read.table</span><span class="p">(</span><span class="s">&quot;/raw_output/ermmlv.test&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">skip</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">19</span><span class="p">)</span>
+
+<span class="n">supmeans</span><span class="p">[</span><span class="n">sim</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="nf">as.matrix</span><span class="p">(</span><span class="n">sup_sim</span><span class="p">[</span><span class="m">61</span><span class="o">:</span><span class="m">70</span><span class="p">,</span><span class="m">2</span><span class="o">:</span><span class="m">13</span><span class="p">]),</span><span class="w"> </span><span class="n">na.rm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span>
+<span class="n">stcmeans</span><span class="p">[</span><span class="n">sim</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="nf">as.matrix</span><span class="p">(</span><span class="n">stc_sim</span><span class="p">[</span><span class="m">61</span><span class="o">:</span><span class="m">70</span><span class="p">,</span><span class="m">2</span><span class="o">:</span><span class="m">13</span><span class="p">]),</span><span class="w"> </span><span class="n">na.rm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span>
+<span class="n">mihmeans</span><span class="p">[</span><span class="n">sim</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="nf">as.matrix</span><span class="p">(</span><span class="n">mih_sim</span><span class="p">[</span><span class="m">61</span><span class="o">:</span><span class="m">70</span><span class="p">,</span><span class="m">2</span><span class="o">:</span><span class="m">13</span><span class="p">]),</span><span class="w"> </span><span class="n">na.rm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span>
+<span class="n">erimeans</span><span class="p">[</span><span class="n">sim</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="nf">as.matrix</span><span class="p">(</span><span class="n">eri_sim</span><span class="p">[</span><span class="m">61</span><span class="o">:</span><span class="m">70</span><span class="p">,</span><span class="m">2</span><span class="o">:</span><span class="m">13</span><span class="p">]),</span><span class="w"> </span><span class="n">na.rm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Then, run “2b_FitSampSimulation.R”, and the necessary data files will be in the output folder.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to the Great Lakes Copula and Routing Model’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Rohan Athreya.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
